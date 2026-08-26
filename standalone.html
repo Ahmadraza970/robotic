@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive 3D Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #09090b;
+      font-family: 'DM Sans', sans-serif;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    .bg-glow {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(120,119,198,0.08), transparent 60%);
+      pointer-events: none;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 64px 64px;
+      pointer-events: none;
+    }
+
+    .card {
+      position: relative;
+      width: 100%;
+      max-width: 1024px;
+      height: 520px;
+      background: rgba(0,0,0,0.96);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      overflow: hidden;
+      display: flex;
+    }
+
+    .spotlight {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(64px);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1;
+    }
+
+    .card:hover .spotlight { opacity: 1; }
+
+    .left {
+      flex: 1;
+      padding: 40px;
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.05);
+      padding: 6px 16px;
+      font-size: 14px;
+      color: #a1a1aa;
+      width: fit-content;
+      margin-bottom: 24px;
+      backdrop-filter: blur(8px);
+      animation: fadeInScale 0.4s cubic-bezier(0.25,0.46,0.45,0.94) 0.05s both;
+    }
+
+    .badge svg { width: 14px; height: 14px; color: #d4d4d8; }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    h1 .gradient {
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-image: linear-gradient(to bottom right, #fff, rgba(255,255,255,0.9), rgba(255,255,255,0.4));
+    }
+
+    .char {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(16px) rotateX(-30deg);
+      transform-origin: bottom;
+      animation: charReveal 0.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards;
+    }
+
+    .desc {
+      margin-top: 20px;
+      color: #a1a1aa;
+      max-width: 400px;
+      line-height: 1.7;
+      font-size: 16px;
+      animation: fadeInUp 0.5s cubic-bezier(0.25,0.46,0.45,0.94) 0.4s both;
+    }
+
+    .cta {
+      margin-top: 28px;
+      animation: fadeInUp 0.5s cubic-bezier(0.25,0.46,0.45,0.94) 0.6s both;
+    }
+
+    .cta a {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      color: #000;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+
+    .cta a:hover { background: rgba(255,255,255,0.9); transform: scale(1.02); }
+    .cta a:active { transform: scale(0.98); }
+    .cta a svg { width: 16px; height: 16px; }
+
+    .right {
+      flex: 1;
+      position: relative;
+      animation: fadeInScale 0.7s cubic-bezier(0.25,0.46,0.45,0.94) 0.2s both;
+    }
+
+    .skeleton {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #18181b, #27272a 40%, #18181b);
+      background-size: 400% 400%;
+      animation: skeletonPulse 2s ease-in-out infinite;
+    }
+
+    spline-viewer {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    @keyframes charReveal {
+      to { opacity: 1; transform: translateY(0) rotateX(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInScale {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes skeletonPulse {
+      0%, 100% { background-position: 0% 50%; opacity: 0.6; }
+      50% { background-position: 100% 50%; opacity: 1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .badge, .char, .desc, .cta, .right {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+      .skeleton { animation: none; opacity: 0.8; }
+    }
+
+    @media (max-width: 768px) {
+      .card { flex-direction: column; height: auto; min-height: 520px; }
+      .left { padding: 24px; }
+      .right { min-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <div class="card" id="card">
+    <div class="spotlight" id="spotlight"></div>
+
+    <div class="left">
+      <div class="badge">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/></svg>
+        Powered by Spline
+      </div>
+
+      <h1><span class="gradient" id="heading"></span></h1>
+
+      <p class="desc">
+        Bring your UI to life with beautiful 3D scenes. Create immersive
+        experiences that capture attention and enhance your design.
+      </p>
+
+      <div class="cta">
+        <a href="mailto:ahmadbkj92@gmail.com?subject=Feedback">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          Send Feedback
+        </a>
+      </div>
+    </div>
+
+    <div class="right" id="scene-container">
+      <div class="skeleton" id="skeleton"></div>
+    </div>
+  </div>
+
+  <script type="module" src="https://unpkg.com/@splinetool/viewer/build/spline-viewer.js"></script>
+  <script>
+    // --- Animated heading ---
+    (function() {
+      var text = "Interactive 3D";
+      var el = document.getElementById("heading");
+      var chars = text.split("");
+      var html = "";
+      chars.forEach(function(ch, i) {
+        html += '<span class="char" style="animation-delay:' + (i * 0.02) + 's">' + ch + '</span>';
+      });
+      el.innerHTML = html;
+    })();
+
+    // --- Spotlight mouse tracking ---
+    (function() {
+      var card = document.getElementById("card");
+      var spot = document.getElementById("spotlight");
+      var size = 200;
+      var visible = false;
+
+      card.addEventListener("mousemove", function(e) {
+        var r = card.getBoundingClientRect();
+        var x = e.clientX - r.left;
+        var y = e.clientY - r.top;
+        spot.style.left = (x - size / 2) + "px";
+        spot.style.top = (y - size / 2) + "px";
+        spot.style.width = size + "px";
+        spot.style.height = size + "px";
+        spot.style.background = "radial-gradient(circle at center, white, transparent 80%)";
+      });
+
+      card.addEventListener("mouseenter", function() { spot.style.opacity = "1"; });
+      card.addEventListener("mouseleave", function() { spot.style.opacity = "0"; });
+    })();
+
+    // --- Load Spline scene when visible ---
+    (function() {
+      var container = document.getElementById("scene-container");
+      var skeleton = document.getElementById("skeleton");
+      var loaded = false;
+
+      function loadScene() {
+        if (loaded) return;
+        loaded = true;
+        var viewer = document.createElement("spline-viewer");
+        viewer.setAttribute("url", "https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode");
+        viewer.addEventListener("load", function() { skeleton.style.display = "none"; });
+        container.appendChild(viewer);
+      }
+
+      if ("IntersectionObserver" in window) {
+        var obs = new IntersectionObserver(function(entries) {
+          if (entries[0].isIntersecting) { loadScene(); obs.disconnect(); }
+        }, { threshold: 0.1 });
+        obs.observe(container);
+      } else {
+        loadScene();
+      }
+    })();
+  </script>
+</body>
+</html>
