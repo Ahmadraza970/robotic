@@ -77,7 +77,7 @@ This project is licensed under the **MIT License**.
 
 **Ahmad Raza**
 
-GitHub: https://github.com/Ahmadraza970
+GitHub: https://github.com/Ahmadraza970 · Portfolio: [ahmadrazaa.me](https://ahmadrazaa.me)
 
 ---
 
